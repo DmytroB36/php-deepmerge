@@ -6,9 +6,10 @@ require 'data.php';
 
 /**
  * @param $data
+ * @param $duplicatesExists
  * @return array
  */
-function createIndex($data): array
+function createIndex($data, &$duplicatesExists = false): array
 {
     $indexArray = [];
 
@@ -19,6 +20,9 @@ function createIndex($data): array
         $subIt = new ArrayIterator($it->current());
 
         while ($subIt->valid()) {
+            if (!$duplicatesExists && array_key_exists($subIt->current(), $indexArray)) {
+                $duplicatesExists = true;
+            }
             $indexArray[$subIt->current()][$it->key()] = true;
             $subIt->next();
         }
@@ -35,7 +39,11 @@ function createIndex($data): array
  */
 function deepMerge(array $data): array
 {
-    $index = createIndex($data);
+    $index = createIndex($data, $unmergedExists);
+
+    if (!$unmergedExists) {
+        return $data;
+    }
 
     $it = new ArrayIterator($data);
 
@@ -61,7 +69,7 @@ function deepMerge(array $data): array
         $it->rewind();
     }
 
-    return $dataMerged;
+    return deepMerge($dataMerged);
 }
 
 $m1 = microtime(true);
